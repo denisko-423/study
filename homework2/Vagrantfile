@@ -1,0 +1,99 @@
+MACHINES = {
+  :'raid-5-level' => {
+    :box_name => "denisko/homework",
+    :box_version => "1.1.0",
+    :cpus => 2,
+    :memory => 1024,
+    :disks => {
+      :sata1 => {
+        :dfile => './sata1.vdi',
+        :size => 150,
+        :port => 1
+      },
+      :sata2 => {
+        :dfile => './sata2.vdi',
+        :size => 150,
+        :port => 2
+      },
+      :sata3 => {
+        :dfile => './sata3.vdi',
+        :size => 150,
+        :port => 3
+      },
+      :sata4 => {
+        :dfile => './sata4.vdi',
+        :size => 150,
+        :port => 4
+      },
+      :sata5 => {
+        :dfile => './sata5.vdi',
+        :size => 150,
+        :port => 5
+      }
+    }
+  }
+}
+
+Vagrant.configure("2") do |config|
+  config.vm.provider "virtualbox" do |g|
+    g.check_guest_additions = false
+  end
+  MACHINES.each do |boxname, boxconfig|
+    config.vm.synced_folder ".", "/vagrant", disabled: true
+    config.vm.define boxname do |box|
+      box.vm.box = boxconfig[:box_name]
+      box.vm.box_version = boxconfig[:box_version]
+      box.vm.host_name = boxname.to_s
+      box.vm.provider :virtualbox do |vb|
+        needsController = false
+        boxconfig[:disks].each do |dname, dconf|
+          unless File.exist?(dconf[:dfile])
+            vb.customize ['createhd', '--filename', dconf[:dfile], '--variant', 'Fixed', '--size', dconf[:size]]
+            needsController =  true
+          end
+        end
+        if needsController == true
+          vb.customize ["storagectl", :id, "--name", "SATA", "--add", "sata" ]
+          boxconfig[:disks].each do |dname, dconf|
+            vb.customize ['storageattach', :id,  '--storagectl', 'SATA', '--port', dconf[:port], '--device', 0, '--type', 'hdd', '--medium', dconf[:dfile]]
+          end
+        end
+      end
+      box.vm.provision "shell", inline: <<-SHELL
+        count=0; disks=""
+        # поиск неразмеченных дисков для создания массива
+        for letter in {b..z}; do
+          sudo cfdisk -P s /dev/sd$letter &> /dev/null
+          if [ "$?" -eq 3 ] # cfdisk код завершения 3 - диск есть, без разметки
+            then disks=$disks" /dev/sd$letter"; let count=$count+1 # перечень и кол-во дисков
+          fi
+        done
+        if [ "$count" -gt 2 ] # для RAID5 нужно минимум 3 диска
+          then
+            # готовим диски, собираем массив
+            sudo mdadm --zero-superblock --force --verbose $disks
+            sudo wipefs --all --force $disks
+            sudo mdadm --create --verbose /dev/md0 -l 5 -n $count $disks
+            # mdadm.conf не требуется, ОС запоминает массив автоматически
+          else
+            echo "For RAID 5 is needed at least 3 disks"
+            exit
+        fi
+        sudo parted -s /dev/md0 mklabel gpt
+        for i in $(seq 1 5); do
+          let beg=($i-1)*20; let end=$i*20
+          if [ "$i" -eq 1 ]
+            # выравнивание первого раздела
+            then sudo parted -s /dev/md0 mkpart primary ext4 4096s $end%
+            else sudo parted -s /dev/md0 mkpart primary ext4 $beg% $end%
+          fi
+          sudo mkfs.ext4 -L "part$i" /dev/md0p$i
+          sudo mkdir -p /raid/part$i
+          sudo mount /dev/md0p$i /raid/part$i
+          sudo echo /dev/md0p$i /raid/part$i ext4 defaults 0 0 >> /etc/fstab
+        done
+      SHELL
+    end
+  end
+end
+

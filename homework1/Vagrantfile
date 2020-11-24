@@ -1,0 +1,42 @@
+# [vagrant@kernel-update ~]$ uname -r
+# 5.9.8-1.el7.elrepo.x86_64
+
+MACHINES = {
+  :"kernel-update" => {
+    :box_name => "denisko/homework",
+    :box_version => "1.1.0",
+    :cpus => 2,
+    :memory => 1024,
+    :net => [],
+    :forwarded_port => []
+  }
+}
+
+Vagrant.configure("2") do |config|
+  config.vm.provider "virtualbox" do |g|
+    g.check_guest_additions = false
+  end
+  MACHINES.each do |boxname, boxconfig|
+    config.vm.synced_folder ".", "/vagrant", disabled: true
+    config.vm.define boxname do |box|
+      box.vm.box = boxconfig[:box_name]
+      box.vm.box_version = boxconfig[:box_version]
+      box.vm.host_name = boxname.to_s
+      if boxconfig.key?(:net)
+        boxconfig[:net].each do |ipconf|
+          box.vm.network "private_network", ipconf
+        end
+      end
+      if boxconfig.key?(:forwarded_port)
+        boxconfig[:forwarded_port].each do |port|
+          box.vm.network "forwarded_port", port
+        end
+      end
+      box.vm.provider "virtualbox" do |v|
+        v.memory = boxconfig[:memory]
+        v.cpus = boxconfig[:cpus]
+      end
+    end
+  end
+end
+
