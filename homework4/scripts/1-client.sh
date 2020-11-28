@@ -14,22 +14,42 @@ sudo echo '192.168.10.10 nfs-server' >> /etc/hosts
 ping -c 4 nfs-server
 
 echo Создаем точку монтирования NFS, назначаем права
-sudo mkdir /nfs
-sudo chmod 0777 /nfs
+sudo mkdir /nfsfolder
+sudo chmod 0777 /nfsfolder
 
 echo Монтируем экспортированный каталог с сервера: версия NFSv3, протокол UDP
-sudo mount.nfs -vv nfs-server:/export/netfolder /nfs -o nfsvers=3,proto=udp,soft
+sudo mount.nfs -vv nfs-server:/export/netfolder /nfsfolder -o nfsvers=3,proto=udp,soft
 
 echo Создаем в NFS-каталоге файл file1M размером 1МБ, сбрасываем на диск буфер ФС
-dd if=/dev/zero of=/nfs/file1M bs=1K count=1024
+dd if=/dev/zero of=/nfsfolder/file1M bs=1K count=1024
 sync
 
 echo Убеждаемся, что файл появился в примонтированном NFS-каталоге
-ls -al /nfs
+ls -al /nfsfolder
 
-echo Чтение файла на клиенте
-dd if=/nfs/file1M of=/dev/null
+echo Копирование файла на клиенте
+cp /nfsfolder/file1M .
 
-echo По окончании работы на клиенте размонтируем NFS-каталог
-sudo umount /nfs
+echo Настройка автомонтирования каталога при старте
+sudo touch /etc/systemd/system/nfsfolder.mount
+cat << EOF | sudo tee /etc/systemd/system/nfsfolder.mount
+[Unit]
+  Description=Mount NFS Share
+  Requires=network-online.target
+  After=network-online.service
+
+[Mount]
+  What=nfs-server:/export/netfolder
+  Where=/nfsfolder
+  Options=nfsvers=3,proto=udp,soft
+  Type=nfs
+
+[Install]
+  WantedBy=multi-user.target
+EOF
+sudo systemctl daemon-reload
+sudo systemctl enable nfsfolder.mount
+
+echo Перезапускаем клиента
+sudo shutdown -r now
 
