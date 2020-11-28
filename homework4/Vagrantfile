@@ -1,0 +1,82 @@
+# Describe VMs
+MACHINES = {
+  :"nfs-server" => {
+    # VM box
+    :box_name => "centos/7",
+    # VM CPU count
+    :cpus => 2,
+    # VM RAM size (Mb)
+    :memory => 1024,
+    # networks
+    :net => [ { :ip => "192.168.10.10" } ],
+    # provision scripts
+    :provision_scripts => [
+      { :path => "./scripts/0-whoami.sh" },
+      { :path => "./scripts/1-server.sh", :args => "server" }
+    ]
+  },
+  :"nfs-client" => {
+    # VM box
+    :box_name => "centos/7",
+    # VM CPU count
+    :cpus => 2,
+    # VM RAM size (Mb)
+    :memory => 1024,
+    # networks
+    :net => [ { :ip => "192.168.10.11" } ],
+    # provision scripts
+    :provision_scripts => [
+      { :path => "./scripts/0-whoami.sh" },
+      { :path => "./scripts/1-client.sh", :args => "client" }
+    ]
+  }
+}
+
+# Function to check whether VM was already provisioned
+def provisioned?(vm_name='default', provider='virtualbox')
+  File.exist?(".vagrant/machines/#{vm_name}/#{provider}/action_provision")
+end
+
+Vagrant.configure("2") do |config|
+  config.vm.provider "virtualbox" do |g|
+    g.check_guest_additions = false
+  end
+  MACHINES.each do |boxname, boxconfig|
+    # Disable shared folders if not provisioned
+    config.vm.synced_folder ".", "/vagrant", type: "virtualbox", disabled: not(provisioned?(boxname))
+    # Apply VM config
+    config.vm.define boxname do |box|
+      # Set VM base box and hostname
+      box.vm.box = boxconfig[:box_name]
+      box.vm.host_name = boxname.to_s
+
+      # Additional network config if present
+      if boxconfig.key?(:net)
+        boxconfig[:net].each do |ipconf|
+          box.vm.network "private_network", ipconf
+        end
+      end
+      
+      # VM resources config: RAM size and CPU count
+      box.vm.provider "virtualbox" do |v|
+        v.memory = boxconfig[:memory]
+        v.cpus = boxconfig[:cpus]
+      end
+      
+      # provision scripts
+      if boxconfig.key?(:provision_scripts)
+        boxconfig[:provision_scripts].each do |script|
+          box.vm.provision "shell",
+            # Path to script
+            path: script[:path],
+            # Script's args
+            args: script[:args],
+            # Set environment variables for script
+            env: {"PROVISIONER" => "vagrant"}
+        end
+      end
+      
+    end
+  end
+end
+
