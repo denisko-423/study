@@ -7,7 +7,7 @@ Bringing machine 'nfs-client' up with 'virtualbox' provider...
 ==> nfs-server: Importing base box 'centos/7'...
 ==> nfs-server: Matching MAC address for NAT networking...
 ==> nfs-server: Checking if box 'centos/7' version '2004.01' is up to date...
-==> nfs-server: Setting the name of the VM: nfs2_nfs-server_1606554831446_42196
+==> nfs-server: Setting the name of the VM: nfs2_nfs-server_1606692916133_53634
 ==> nfs-server: Clearing any previously set network interfaces...
 ==> nfs-server: Preparing network interfaces based on configuration...
     nfs-server: Adapter 1: nat
@@ -25,6 +25,7 @@ Bringing machine 'nfs-client' up with 'virtualbox' provider...
     nfs-server: Warning: Connection reset. Retrying...
     nfs-server: Warning: Remote connection disconnect. Retrying...
     nfs-server: Warning: Connection reset. Retrying...
+    nfs-server: Warning: Remote connection disconnect. Retrying...
     nfs-server: 
     nfs-server: Vagrant insecure key detected. Vagrant will automatically replace
     nfs-server: this with a newly generated keypair for better security.
@@ -36,7 +37,7 @@ Bringing machine 'nfs-client' up with 'virtualbox' provider...
 ==> nfs-server: Setting hostname...
 ==> nfs-server: Configuring and enabling network interfaces...
 ==> nfs-server: Running provisioner: shell...
-    nfs-server: Running: /tmp/vagrant-shell20201128-80629-60etrk.sh
+    nfs-server: Running: /tmp/vagrant-shell20201130-8098-yfsn7s.sh
     nfs-server: + whoami
     nfs-server: root
     nfs-server: + uname -a
@@ -45,24 +46,24 @@ Bringing machine 'nfs-client' up with 'virtualbox' provider...
     nfs-server: nfs-server
     nfs-server: + ip addr show dev eth1
     nfs-server: 3: eth1: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc pfifo_fast state UP group default qlen 1000                                                                                   
-    nfs-server:     link/ether 08:00:27:71:03:0e brd ff:ff:ff:ff:ff:ff                              
+    nfs-server:     link/ether 08:00:27:d0:e1:00 brd ff:ff:ff:ff:ff:ff                              
     nfs-server:     inet 192.168.10.10/24 brd 192.168.10.255 scope global noprefixroute eth1        
     nfs-server:        valid_lft forever preferred_lft forever                                      
-    nfs-server:     inet6 fe80::a00:27ff:fe71:30e/64 scope link tentative                           
+    nfs-server:     inet6 fe80::a00:27ff:fed0:e100/64 scope link tentative                          
     nfs-server:        valid_lft forever preferred_lft forever                                      
 ==> nfs-server: Running provisioner: shell...
-    nfs-server: Running: /tmp/vagrant-shell20201128-80629-bi5nw.sh
+    nfs-server: Running: /tmp/vagrant-shell20201130-8098-2p49mn.sh
     nfs-server: Устанавливаем пакет для работы с NFS
     nfs-server: + echo Устанавливаем пакет для работы с NFS
     nfs-server: + sudo yum install -y nfs-utils                                                     
     nfs-server: Loaded plugins: fastestmirror
     nfs-server: Determining fastest mirrors
     nfs-server:  * base: mirror.linux-ia64.org
-    nfs-server:  * extras: mirror.sale-dedic.com                                                    
-    nfs-server:  * updates: mirror.linux-ia64.org                                                   
+    nfs-server:  * extras: mirror.linux-ia64.org                                                    
+    nfs-server:  * updates: mirror.linux-ia64.org
     nfs-server: Resolving Dependencies
-    nfs-server: --> Running transaction check                                                       
-    nfs-server: ---> Package nfs-utils.x86_64 1:1.3.0-0.66.el7 will be updated                      
+    nfs-server: --> Running transaction check
+    nfs-server: ---> Package nfs-utils.x86_64 1:1.3.0-0.66.el7 will be updated
     nfs-server: ---> Package nfs-utils.x86_64 1:1.3.0-0.68.el7 will be an update
     nfs-server: --> Finished Dependency Resolution
     nfs-server: 
@@ -80,7 +81,7 @@ Bringing machine 'nfs-client' up with 'virtualbox' provider...
     nfs-server:                                                                                     
     nfs-server: Total download size: 412 k                                                          
     nfs-server: Downloading packages:                                                               
-    nfs-server: No Presto metadata available for base                                               
+    nfs-server: No Presto metadata available for base
     nfs-server: Public key for nfs-utils-1.3.0-0.68.el7.x86_64.rpm is not installed
     nfs-server: warning: /var/cache/yum/x86_64/7/base/packages/nfs-utils-1.3.0-0.68.el7.x86_64.rpm: Header V3 RSA/SHA256 Signature, key ID f4a80eb5: NOKEY                                              
     nfs-server: Retrieving key from file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7
@@ -92,7 +93,7 @@ Bringing machine 'nfs-client' up with 'virtualbox' provider...
     nfs-server: Running transaction check
     nfs-server: Running transaction test
     nfs-server: Transaction test succeeded
-    nfs-server: Running transaction
+    nfs-server: Running transaction                                                                 
     nfs-server:   Updating   : 1:nfs-utils-1.3.0-0.68.el7.x86_64                            1/2
     nfs-server:  
     nfs-server:   Cleanup    : 1:nfs-utils-1.3.0-0.66.el7.x86_64                            2/2     
@@ -111,66 +112,68 @@ Bringing machine 'nfs-client' up with 'virtualbox' provider...
     nfs-server: + sudo systemctl -l status rpcbind
     nfs-server: ● rpcbind.service - RPC bind service
     nfs-server:    Loaded: loaded (/usr/lib/systemd/system/rpcbind.service; enabled; vendor preset: enabled)                                                                                            
-    nfs-server:    Active: active (running) since Sat 2020-11-28 09:13:59 UTC; 54s ago              
-    nfs-server:  Main PID: 351 (rpcbind)                                                            
+    nfs-server:    Active: active (running) since Sun 2020-11-29 23:35:23 UTC; 1min 3s ago          
+    nfs-server:  Main PID: 393 (rpcbind)                                                            
     nfs-server:    CGroup: /system.slice/rpcbind.service                                            
-    nfs-server:            └─351 /sbin/rpcbind -w                                                   
+    nfs-server:            └─393 /sbin/rpcbind -w                                                   
     nfs-server:                                                                                     
-    nfs-server: Nov 28 09:13:58 localhost.localdomain systemd[1]: Starting RPC bind service...      
-    nfs-server: Nov 28 09:13:59 localhost.localdomain systemd[1]: Started RPC bind service.         
+    nfs-server: Nov 29 23:35:23 localhost.localdomain systemd[1]: Starting RPC bind service...      
+    nfs-server: Nov 29 23:35:23 localhost.localdomain systemd[1]: Started RPC bind service.         
     nfs-server: + sudo systemctl enable --now nfs-server
     nfs-server: Created symlink from /etc/systemd/system/multi-user.target.wants/nfs-server.service to /usr/lib/systemd/system/nfs-server.service.                                                      
     nfs-server: + sudo systemctl -l status nfs-server
     nfs-server: ● nfs-server.service - NFS server and services
     nfs-server:    Loaded: loaded (/usr/lib/systemd/system/nfs-server.service; enabled; vendor preset: disabled)                                                                                        
-    nfs-server:    Active: active (exited) since Sat 2020-11-28 09:14:53 UTC; 46ms ago              
-    nfs-server:   Process: 3017 ExecStartPost=/bin/sh -c if systemctl -q is-active gssproxy; then systemctl reload gssproxy ; fi (code=exited, status=0/SUCCESS)                                        
-    nfs-server:   Process: 3000 ExecStart=/usr/sbin/rpc.nfsd $RPCNFSDARGS (code=exited, status=0/SUCCESS)                                                                                               
-    nfs-server:   Process: 2998 ExecStartPre=/usr/sbin/exportfs -r (code=exited, status=0/SUCCESS)  
-    nfs-server:  Main PID: 3000 (code=exited, status=0/SUCCESS)                                     
+    nfs-server:    Active: active (exited) since Sun 2020-11-29 23:36:27 UTC; 35ms ago              
+    nfs-server:   Process: 3036 ExecStartPost=/bin/sh -c if systemctl -q is-active gssproxy; then systemctl reload gssproxy ; fi (code=exited, status=0/SUCCESS)                                        
+    nfs-server:   Process: 3020 ExecStart=/usr/sbin/rpc.nfsd $RPCNFSDARGS (code=exited, status=0/SUCCESS)                                                                                               
+    nfs-server:   Process: 3018 ExecStartPre=/usr/sbin/exportfs -r (code=exited, status=0/SUCCESS)  
+    nfs-server:  Main PID: 3020 (code=exited, status=0/SUCCESS)                                     
     nfs-server:    CGroup: /system.slice/nfs-server.service                                         
     nfs-server:                                                                                     
-    nfs-server: Nov 28 09:14:53 nfs-server systemd[1]: Starting NFS server and services...          
-    nfs-server: Nov 28 09:14:53 nfs-server systemd[1]: Started NFS server and services.             
+    nfs-server: Nov 29 23:36:27 nfs-server systemd[1]: Starting NFS server and services...          
+    nfs-server: Nov 29 23:36:27 nfs-server systemd[1]: Started NFS server and services.             
     nfs-server: + sudo systemctl enable --now rpc-statd
     nfs-server: + sudo systemctl -l status rpc-statd
     nfs-server: ● rpc-statd.service - NFS status monitor for NFSv2/3 locking.
     nfs-server:    Loaded: loaded (/usr/lib/systemd/system/rpc-statd.service; static; vendor preset: disabled)                                                                                          
-    nfs-server:    Active: active (running) since Sat 2020-11-28 09:14:53 UTC; 293ms ago            
-    nfs-server:  Main PID: 2990 (rpc.statd)                                                         
+    nfs-server:    Active: active (running) since Sun 2020-11-29 23:36:27 UTC; 552ms ago            
+    nfs-server:  Main PID: 3011 (rpc.statd)                                                         
     nfs-server:    CGroup: /system.slice/rpc-statd.service                                          
-    nfs-server:            └─2990 /usr/sbin/rpc.statd                                               
+    nfs-server:            └─3011 /usr/sbin/rpc.statd                                               
     nfs-server:                                                                                     
-    nfs-server: Nov 28 09:14:53 nfs-server systemd[1]: Starting NFS status monitor for NFSv2/3 locking....                                                                                              
-    nfs-server: Nov 28 09:14:53 nfs-server rpc.statd[2990]: Version 1.3.0 starting                  
-    nfs-server: Nov 28 09:14:53 nfs-server rpc.statd[2990]: Flags: TI-RPC                           
-    nfs-server: Nov 28 09:14:53 nfs-server rpc.statd[2990]: Initializing NSM state                  
-    nfs-server: Nov 28 09:14:53 nfs-server systemd[1]: Started NFS status monitor for NFSv2/3 locking..                                                                                                 
+    nfs-server: Nov 29 23:36:27 nfs-server rpc.statd[3011]: Version 1.3.0 starting                  
+    nfs-server: Nov 29 23:36:27 nfs-server systemd[1]: Starting NFS status monitor for NFSv2/3 locking....                                                                                              
+    nfs-server: Nov 29 23:36:27 nfs-server rpc.statd[3011]: Flags: TI-RPC                           
+    nfs-server: Nov 29 23:36:27 nfs-server rpc.statd[3011]: Initializing NSM state                  
+    nfs-server: Nov 29 23:36:27 nfs-server systemd[1]: Started NFS status monitor for NFSv2/3 locking..                                                                                                 
     nfs-server: + sudo systemctl enable --now nfs-idmapd
     nfs-server: + sudo systemctl -l status nfs-idmapd
     nfs-server: ● nfs-idmapd.service - NFSv4 ID-name mapping service
     nfs-server:    Loaded: loaded (/usr/lib/systemd/system/nfs-idmapd.service; static; vendor preset: disabled)                                                                                         
-    nfs-server:    Active: active (running) since Sat 2020-11-28 09:14:53 UTC; 445ms ago            
-    nfs-server:  Main PID: 2994 (rpc.idmapd)                                                        
+    nfs-server:    Active: active (running) since Sun 2020-11-29 23:36:27 UTC; 736ms ago            
+    nfs-server:  Main PID: 3015 (rpc.idmapd)                                                        
     nfs-server:    CGroup: /system.slice/nfs-idmapd.service                                         
-    nfs-server:            └─2994 /usr/sbin/rpc.idmapd                                              
+    nfs-server:            └─3015 /usr/sbin/rpc.idmapd                                              
     nfs-server:                                                                                     
-    nfs-server: Nov 28 09:14:53 nfs-server systemd[1]: Starting NFSv4 ID-name mapping service...    
-    nfs-server: Nov 28 09:14:53 nfs-server systemd[1]: Started NFSv4 ID-name mapping service.       
+    nfs-server: Nov 29 23:36:27 nfs-server systemd[1]: Starting NFSv4 ID-name mapping service...    
+    nfs-server: Nov 29 23:36:27 nfs-server systemd[1]: Started NFSv4 ID-name mapping service.       
     nfs-server: + sudo systemctl enable --now firewalld
     nfs-server: Created symlink from /etc/systemd/system/dbus-org.fedoraproject.FirewallD1.service to /usr/lib/systemd/system/firewalld.service.                                                        
     nfs-server: Created symlink from /etc/systemd/system/multi-user.target.wants/firewalld.service to /usr/lib/systemd/system/firewalld.service.                                                        
     nfs-server: + sudo systemctl -l status firewalld
     nfs-server: ● firewalld.service - firewalld - dynamic firewall daemon
     nfs-server:    Loaded: loaded (/usr/lib/systemd/system/firewalld.service; enabled; vendor preset: enabled)                                                                                          
-    nfs-server:    Active: active (running) since Sat 2020-11-28 09:14:53 UTC; 55ms ago             
+    nfs-server:    Active: active (running) since Sun 2020-11-29 23:36:28 UTC; 54ms ago             
     nfs-server:      Docs: man:firewalld(1)                                                         
-    nfs-server:  Main PID: 3083 (firewalld)                                                         
+    nfs-server:  Main PID: 3104 (firewalld)                                                         
     nfs-server:    CGroup: /system.slice/firewalld.service                                          
-    nfs-server:            └─3083 /usr/bin/python2 -Es /usr/sbin/firewalld --nofork --nopid         
+    nfs-server:            ├─3104 /usr/bin/python2 -Es /usr/sbin/firewalld --nofork --nopid         
+    nfs-server:            ├─3111 /usr/sbin/ip6tables -w -L -n                                      
+    nfs-server:            └─3114 /usr/sbin/ip6tables -w -L -n                                      
     nfs-server:                                                                                     
-    nfs-server: Nov 28 09:14:53 nfs-server systemd[1]: Starting firewalld - dynamic firewall daemon...                                                                                                  
-    nfs-server: Nov 28 09:14:53 nfs-server systemd[1]: Started firewalld - dynamic firewall daemon. 
+    nfs-server: Nov 29 23:36:28 nfs-server systemd[1]: Starting firewalld - dynamic firewall daemon...                                                                                                  
+    nfs-server: Nov 29 23:36:28 nfs-server systemd[1]: Started firewalld - dynamic firewall daemon. 
     nfs-server: Настраиваем firewall на работу с NFS
     nfs-server: + echo Настраиваем firewall на работу с NFS
     nfs-server: + sudo firewall-cmd --permanent --add-service=nfs3 --add-service=mountd --add-service=rpc-bind                                                                                          
@@ -209,7 +212,7 @@ Bringing machine 'nfs-client' up with 'virtualbox' provider...
 ==> nfs-client: Importing base box 'centos/7'...
 ==> nfs-client: Matching MAC address for NAT networking...
 ==> nfs-client: Checking if box 'centos/7' version '2004.01' is up to date...
-==> nfs-client: Setting the name of the VM: nfs2_nfs-client_1606554913181_55852
+==> nfs-client: Setting the name of the VM: nfs2_nfs-client_1606693012306_56301
 ==> nfs-client: Fixed port collision for 22 => 2222. Now on port 2200.
 ==> nfs-client: Clearing any previously set network interfaces...
 ==> nfs-client: Preparing network interfaces based on configuration...
@@ -223,12 +226,6 @@ Bringing machine 'nfs-client' up with 'virtualbox' provider...
     nfs-client: SSH address: 127.0.0.1:2200
     nfs-client: SSH username: vagrant
     nfs-client: SSH auth method: private key
-    nfs-client: Warning: Connection reset. Retrying...
-    nfs-client: Warning: Remote connection disconnect. Retrying...
-    nfs-client: Warning: Connection reset. Retrying...
-    nfs-client: Warning: Remote connection disconnect. Retrying...
-    nfs-client: Warning: Connection reset. Retrying...
-    nfs-client: Warning: Remote connection disconnect. Retrying...
     nfs-client: 
     nfs-client: Vagrant insecure key detected. Vagrant will automatically replace
     nfs-client: this with a newly generated keypair for better security.
@@ -240,7 +237,7 @@ Bringing machine 'nfs-client' up with 'virtualbox' provider...
 ==> nfs-client: Setting hostname...
 ==> nfs-client: Configuring and enabling network interfaces...
 ==> nfs-client: Running provisioner: shell...
-    nfs-client: Running: /tmp/vagrant-shell20201128-80629-1dwj2ef.sh
+    nfs-client: Running: /tmp/vagrant-shell20201130-8098-y1re3z.sh
     nfs-client: + whoami
     nfs-client: root
     nfs-client: + uname -a
@@ -249,31 +246,29 @@ Bringing machine 'nfs-client' up with 'virtualbox' provider...
     nfs-client: nfs-client
     nfs-client: + ip addr show dev eth1
     nfs-client: 3: eth1: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc pfifo_fast state UP group default qlen 1000                                                                                   
-    nfs-client:     link/ether 08:00:27:f1:39:96 brd ff:ff:ff:ff:ff:ff                              
-    nfs-client:     inet 192.168.10.11/24 brd 192.168.10.255 scope global noprefixroute eth1
+    nfs-client:     link/ether 08:00:27:33:bc:af brd ff:ff:ff:ff:ff:ff                              
+    nfs-client:     inet 192.168.10.11/24 brd 192.168.10.255 scope global noprefixroute eth1        
     nfs-client:        valid_lft forever preferred_lft forever                                      
-    nfs-client:     inet6 fe80::a00:27ff:fef1:3996/64 scope link tentative                          
+    nfs-client:     inet6 fe80::a00:27ff:fe33:bcaf/64 scope link tentative                          
     nfs-client:        valid_lft forever preferred_lft forever                                      
 ==> nfs-client: Running provisioner: shell...
-    nfs-client: Running: /tmp/vagrant-shell20201128-80629-abtzdn.sh
+    nfs-client: Running: /tmp/vagrant-shell20201130-8098-1becvvy.sh
     nfs-client: Устанавливаем пакет для работы с NFS
     nfs-client: + echo Устанавливаем пакет для работы с NFS
     nfs-client: + sudo yum install -y nfs-utils                                                     
     nfs-client: Loaded plugins: fastestmirror
     nfs-client: Determining fastest mirrors
     nfs-client:  * base: mirror.linux-ia64.org
-    nfs-client:  * extras: mirrors.datahouse.ru                                                     
-    nfs-client:  * updates: mirror.linux-ia64.org                                                   
-    nfs-client: http://mirrors.datahouse.ru/centos/7.9.2009/os/x86_64/repodata/6d0c3a488c282fe537794b5946b01e28c7f44db79097bb06826e1c0c88bad5ef-primary.sqlite.bz2: [Errno 14] curl#56 - "Recv failure: Connection reset by peer"                                                                           
-    nfs-client: Trying other mirror.
+    nfs-client:  * extras: mirror.linux-ia64.org
+    nfs-client:  * updates: mirror.linux-ia64.org
     nfs-client: Resolving Dependencies
-    nfs-client: --> Running transaction check                                                       
+    nfs-client: --> Running transaction check
     nfs-client: ---> Package nfs-utils.x86_64 1:1.3.0-0.66.el7 will be updated                      
     nfs-client: ---> Package nfs-utils.x86_64 1:1.3.0-0.68.el7 will be an update
     nfs-client: --> Finished Dependency Resolution
     nfs-client: 
     nfs-client: Dependencies Resolved                                                               
-    nfs-client: 
+    nfs-client:                                                                                     
     nfs-client: ================================================================================    
     nfs-client:  Package           Arch           Version                    Repository    Size     
     nfs-client: ================================================================================    
@@ -283,11 +278,12 @@ Bringing machine 'nfs-client' up with 'virtualbox' provider...
     nfs-client: Transaction Summary                                                                 
     nfs-client: ================================================================================    
     nfs-client: Upgrade  1 Package                                                                  
-    nfs-client: Total download size: 412 k
+    nfs-client:                                                                                     
+    nfs-client: Total download size: 412 k                                                          
     nfs-client: Downloading packages:                                                               
     nfs-client: No Presto metadata available for base                                               
-    nfs-client: warning: /var/cache/yum/x86_64/7/base/packages/nfs-utils-1.3.0-0.68.el7.x86_64.rpm: Header V3 RSA/SHA256 Signature, key ID f4a80eb5: NOKEY                                              
     nfs-client: Public key for nfs-utils-1.3.0-0.68.el7.x86_64.rpm is not installed
+    nfs-client: warning: /var/cache/yum/x86_64/7/base/packages/nfs-utils-1.3.0-0.68.el7.x86_64.rpm: Header V3 RSA/SHA256 Signature, key ID f4a80eb5: NOKEY                                              
     nfs-client: Retrieving key from file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7
     nfs-client: Importing GPG key 0xF4A80EB5:
     nfs-client:  Userid     : "CentOS-7 Key (CentOS 7 Official Signing Key) <security@centos.org>"  
@@ -297,7 +293,7 @@ Bringing machine 'nfs-client' up with 'virtualbox' provider...
     nfs-client: Running transaction check
     nfs-client: Running transaction test
     nfs-client: Transaction test succeeded
-    nfs-client: Running transaction                                                                 
+    nfs-client: Running transaction
     nfs-client:   Updating   : 1:nfs-utils-1.3.0-0.68.el7.x86_64                            1/2
     nfs-client:  
     nfs-client:   Cleanup    : 1:nfs-utils-1.3.0-0.66.el7.x86_64                            2/2     
@@ -309,7 +305,8 @@ Bringing machine 'nfs-client' up with 'virtualbox' provider...
     nfs-client:                                                                                     
     nfs-client: Updated:                                                                            
     nfs-client:   nfs-utils.x86_64 1:1.3.0-0.68.el7                                                 
-    nfs-client: Complete!
+    nfs-client:                                                                                     
+    nfs-client: Complete!                                                                           
     nfs-client: Включаем автозагрузку и запускаем firewalld, на клиенте настройки не требуется
     nfs-client: + echo Включаем автозагрузку и запускаем firewalld, на клиенте настройки не требуется                                                                                                   
     nfs-client: + sudo systemctl enable --now firewalld                                             
@@ -318,28 +315,28 @@ Bringing machine 'nfs-client' up with 'virtualbox' provider...
     nfs-client: + sudo systemctl -l status firewalld
     nfs-client: ● firewalld.service - firewalld - dynamic firewall daemon
     nfs-client:    Loaded: loaded (/usr/lib/systemd/system/firewalld.service; enabled; vendor preset: enabled)                                                                                          
-    nfs-client:    Active: active (running) since Sat 2020-11-28 09:16:23 UTC; 53ms ago             
+    nfs-client:    Active: active (running) since Sun 2020-11-29 23:37:37 UTC; 25ms ago             
     nfs-client:      Docs: man:firewalld(1)                                                         
-    nfs-client:  Main PID: 2951 (firewalld)                                                         
+    nfs-client:  Main PID: 2962 (firewalld)                                                         
     nfs-client:    CGroup: /system.slice/firewalld.service                                          
-    nfs-client:            ├─2951 /usr/bin/python2 -Es /usr/sbin/firewalld --nofork --nopid         
-    nfs-client:            └─2953 /usr/sbin/iptables -w -L -n                                       
+    nfs-client:            ├─2962 /usr/bin/python2 -Es /usr/sbin/firewalld --nofork --nopid         
+    nfs-client:            └─2969 /usr/bin/python2 -Es /usr/sbin/firewalld --nofork --nopid         
     nfs-client:                                                                                     
-    nfs-client: Nov 28 09:16:22 nfs-client systemd[1]: Starting firewalld - dynamic firewall daemon...                                                                                                  
-    nfs-client: Nov 28 09:16:23 nfs-client systemd[1]: Started firewalld - dynamic firewall daemon. 
+    nfs-client: Nov 29 23:37:37 nfs-client systemd[1]: Starting firewalld - dynamic firewall daemon...                                                                                                  
+    nfs-client: Nov 29 23:37:37 nfs-client systemd[1]: Started firewalld - dynamic firewall daemon. 
     nfs-client: Работа с сервером будеть проводиться по символическому имени nfs-server
     nfs-client: + echo Работа с сервером будеть проводиться по символическому имени nfs-server
     nfs-client: + sudo echo '192.168.10.10 nfs-server'                                              
     nfs-client: + ping -c 4 nfs-server
     nfs-client: PING nfs-server (192.168.10.10) 56(84) bytes of data.
-    nfs-client: 64 bytes from nfs-server (192.168.10.10): icmp_seq=1 ttl=64 time=0.491 ms           
-    nfs-client: 64 bytes from nfs-server (192.168.10.10): icmp_seq=2 ttl=64 time=0.418 ms
-    nfs-client: 64 bytes from nfs-server (192.168.10.10): icmp_seq=3 ttl=64 time=0.590 ms
-    nfs-client: 64 bytes from nfs-server (192.168.10.10): icmp_seq=4 ttl=64 time=0.307 ms
+    nfs-client: 64 bytes from nfs-server (192.168.10.10): icmp_seq=1 ttl=64 time=0.504 ms           
+    nfs-client: 64 bytes from nfs-server (192.168.10.10): icmp_seq=2 ttl=64 time=0.697 ms
+    nfs-client: 64 bytes from nfs-server (192.168.10.10): icmp_seq=3 ttl=64 time=0.392 ms
+    nfs-client: 64 bytes from nfs-server (192.168.10.10): icmp_seq=4 ttl=64 time=0.451 ms
     nfs-client:                                                                                     
     nfs-client: --- nfs-server ping statistics ---                                                  
-    nfs-client: 4 packets transmitted, 4 received, 0% packet loss, time 2999ms                      
-    nfs-client: rtt min/avg/max/mdev = 0.307/0.451/0.590/0.105 ms                                   
+    nfs-client: 4 packets transmitted, 4 received, 0% packet loss, time 3065ms                      
+    nfs-client: rtt min/avg/max/mdev = 0.392/0.511/0.697/0.114 ms                                   
     nfs-client: Создаем точку монтирования NFS, назначаем права
     nfs-client: + echo Создаем точку монтирования NFS, назначаем права
     nfs-client: + sudo mkdir /nfsfolder
@@ -349,32 +346,33 @@ Bringing machine 'nfs-client' up with 'virtualbox' provider...
     nfs-client: + sudo mount.nfs -vv nfs-server:/export/netfolder /nfsfolder -o nfsvers=3,proto=udp,soft                                                                                                
     nfs-client: mount.nfs: trying 192.168.10.10 prog 100003 vers 3 prot UDP port 2049
     nfs-client: mount.nfs: trying 192.168.10.10 prog 100005 vers 3 prot UDP port 20048
-    nfs-client: mount.nfs: timeout set for Sat Nov 28 09:18:26 2020
+    nfs-client: mount.nfs: timeout set for Sun Nov 29 23:39:41 2020
     nfs-client: mount.nfs: trying text-based options 'nfsvers=3,proto=udp,soft,addr=192.168.10.10'  
     nfs-client: mount.nfs: prog 100003, trying vers=3, prot=17                                      
     nfs-client: mount.nfs: prog 100005, trying vers=3, prot=17                                      
-    nfs-client: Создаем в NFS-каталоге файл file1M размером 1МБ, сбрасываем на диск буфер ФС
-    nfs-client: + echo Создаем в NFS-каталоге файл file1M размером 1МБ, сбрасываем на диск буфер ФС
-    nfs-client: + dd if=/dev/zero of=/nfsfolder/file1M bs=1K count=1024                             
+    nfs-client: Создаем в NFS-каталоге папку upload, в ней файл file1M размером 1МБ, сбрасываем на диск буфер ФС                                                                                        
+    nfs-client: + echo Создаем в NFS-каталоге папку upload, в ней файл file1M размером 1МБ, сбрасываем на диск буфер ФС                                                                                 
+    nfs-client: + mkdir /nfsfolder/upload                                                           
+    nfs-client: + dd if=/dev/zero of=/nfsfolder/upload/file1M bs=1K count=1024
     nfs-client: 1024+0 records in
     nfs-client: 1024+0 records out                                                                  
-    nfs-client: 1048576 bytes (1.0 MB) copied, 0.136333 s, 7.7 MB/s                                 
-    nfs-client: + sync
-    nfs-client: Убеждаемся, что файл появился в примонтированном NFS-каталоге
-    nfs-client: + echo Убеждаемся, что файл появился в примонтированном NFS-каталоге
-    nfs-client: + ls -al /nfsfolder                                                                 
+    nfs-client: 1048576 bytes (1.0 MB) copied, 0.0174669 s, 60.0 MB/s                               
+    nfs-client: + sync                                                                              
+    nfs-client: Убеждаемся, что файл появился в папке upload
+    nfs-client: + echo Убеждаемся, что файл появился в папке upload
+    nfs-client: + ls -al /nfsfolder/upload                                                          
     nfs-client: total 1984
-    nfs-client: drwxrwxrwx.  2 root      root           20 Nov 28 09:16 .                           
-    nfs-client: dr-xr-xr-x. 18 root      root          257 Nov 28 09:16 ..                          
-    nfs-client: -rw-r--r--.  1 nfsnobody nfsnobody 1048576 Nov 28 09:16 file1M                      
+    nfs-client: drwxr-xr-x. 2 nfsnobody nfsnobody      20 Nov 29 23:37 .                            
+    nfs-client: drwxrwxrwx. 3 root      root           20 Nov 29 23:37 ..                           
+    nfs-client: -rw-r--r--. 1 nfsnobody nfsnobody 1048576 Nov 29 23:37 file1M                       
     nfs-client: Копирование файла на клиенте
     nfs-client: + echo Копирование файла на клиенте
-    nfs-client: + cp /nfsfolder/file1M .                                                            
+    nfs-client: + cp /nfsfolder/upload/file1M .
     nfs-client: Настройка автомонтирования каталога при старте
     nfs-client: + echo Настройка автомонтирования каталога при старте
     nfs-client: + sudo touch /etc/systemd/system/nfsfolder.mount                                    
-    nfs-client: + cat
-    nfs-client: + sudo tee /etc/systemd/system/nfsfolder.mount                                      
+    nfs-client: + sudo tee /etc/systemd/system/nfsfolder.mount
+    nfs-client: + cat                                                                               
     nfs-client: [Unit]
     nfs-client:   Description=Mount NFS Share                                                       
     nfs-client:   Requires=network-online.target                                                    
@@ -390,10 +388,10 @@ Bringing machine 'nfs-client' up with 'virtualbox' provider...
     nfs-client:   WantedBy=multi-user.target                                                        
     nfs-client: + sudo systemctl daemon-reload
     nfs-client: + sudo systemctl enable nfsfolder.mount
-    nfs-client: Created symlink from /etc/systemd/system/multi-user.target.wants/nfsfolder.mount to /etc/systemd/system/nfsfolder.mount.
+    nfs-client: Created symlink from /etc/systemd/system/multi-user.target.wants/nfsfolder.mount to /etc/systemd/system/nfsfolder.mount.                                                                
     nfs-client: Перезапускаем клиента
     nfs-client: + echo Перезапускаем клиента
-    nfs-client: + sudo shutdown -r now
+    nfs-client: + sudo shutdown -r now                                                              
 
 # ---------------------------------------------------------
 # Через некоторое время идем на сервер. Монтирование каталога со стороны клиента есть.
@@ -405,13 +403,13 @@ denisko@denisko:~/nfs2$ vagrant ssh nfs-server
 [vagrant@nfs-server ~]$ nfsstat
 Server rpc stats:
 calls      badcalls   badclnt    badauth    xdrcall
-60         0          0          0          0       
+63         0          0          0          0       
 
 Server nfs v3:
 null         getattr      setattr      lookup       access       readlink     
-4         7% 7        12% 0         0% 1         1% 2         3% 0         0% 
+4         7% 6        10% 0         0% 1         1% 3         5% 0         0% 
 read         write        create       mkdir        symlink      mknod        
-0         0% 32       58% 1         1% 0         0% 0         0% 0         0% 
+0         0% 32       57% 1         1% 1         1% 0         0% 0         0% 
 remove       rmdir        rename       link         readdir      readdirplus  
 0         0% 0         0% 0         0% 0         0% 0         0% 1         1% 
 fsstat       fsinfo       pathconf     commit       
@@ -428,21 +426,21 @@ denisko@denisko:~/nfs2$ vagrant ssh nfs-client
 [vagrant@nfs-client ~]$ sudo systemctl status nfsfolder.mount
 ● nfsfolder.mount - Mount NFS Share
    Loaded: loaded (/etc/systemd/system/nfsfolder.mount; enabled; vendor preset: disabled)
-   Active: active (mounted) since Sat 2020-11-28 09:16:43 UTC; 2h 2min ago
+   Active: active (mounted) since Sun 2020-11-29 23:38:03 UTC; 2min 29s ago
     Where: /nfsfolder
      What: nfs-server:/export/netfolder
-  Process: 797 ExecMount=/bin/mount nfs-server:/export/netfolder /nfsfolder -t nfs -o nfsvers=3,proto=udp,soft (code=exited, status=0/SUCCESS)
+  Process: 796 ExecMount=/bin/mount nfs-server:/export/netfolder /nfsfolder -t nfs -o nfsvers=3,proto=udp,soft (code=exited, status=0/SUCCESS)
 
-Nov 28 09:16:43 nfs-client systemd[1]: Mounting Mount NFS Share...
-Nov 28 09:16:43 nfs-client systemd[1]: Mounted Mount NFS Share.
+Nov 29 23:38:03 nfs-client systemd[1]: Mounting Mount NFS Share...
+Nov 29 23:38:03 nfs-client systemd[1]: Mounted Mount NFS Share.
 [vagrant@nfs-client ~]$ mount | grep nfs
 sunrpc on /var/lib/nfs/rpc_pipefs type rpc_pipefs (rw,relatime)
 nfs-server:/export/netfolder on /nfsfolder type nfs (rw,relatime,vers=3,rsize=32768,wsize=32768,namlen=255,soft,proto=udp,timeo=11,retrans=3,sec=sys,mountaddr=192.168.10.10,mountvers=3,mountport=20048,mountproto=udp,local_lock=none,addr=192.168.10.10)
-[vagrant@nfs-client ~]$ ls -al /nfsfolder/
+[vagrant@nfs-client ~]$ ls -al /nfsfolder/upload
 total 1024
-drwxrwxrwx.  2 root      root           20 Nov 28 09:16 .
-dr-xr-xr-x. 18 root      root          257 Nov 28 09:16 ..
--rw-r--r--.  1 nfsnobody nfsnobody 1048576 Nov 28 09:16 file1M
+drwxr-xr-x. 2 nfsnobody nfsnobody      20 Nov 29 23:37 .
+drwxrwxrwx. 3 root      root           20 Nov 29 23:37 ..
+-rw-r--r--. 1 nfsnobody nfsnobody 1048576 Nov 29 23:37 file1M
 [vagrant@nfs-client ~]$ logout
 Connection to 127.0.0.1 closed.
 denisko@denisko:~/nfs2$ 

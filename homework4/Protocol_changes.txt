@@ -1,0 +1,45 @@
+...
+    nfs-client: Создаем в NFS-каталоге папку upload, в ней файл file1M размером 1МБ, сбрасываем на диск буфер ФС                                                                                        
+    nfs-client: + echo Создаем в NFS-каталоге папку upload, в ней файл file1M размером 1МБ, сбрасываем на диск буфер ФС                                                                                 
+->  nfs-client: + mkdir /nfsfolder/upload                                                           
+->  nfs-client: + dd if=/dev/zero of=/nfsfolder/upload/file1M bs=1K count=1024
+    nfs-client: 1024+0 records in
+    nfs-client: 1024+0 records out                                                                  
+    nfs-client: 1048576 bytes (1.0 MB) copied, 0.0174669 s, 60.0 MB/s                               
+    nfs-client: + sync                                                                              
+    nfs-client: Убеждаемся, что файл появился в папке upload
+    nfs-client: + echo Убеждаемся, что файл появился в папке upload
+->  nfs-client: + ls -al /nfsfolder/upload                                                          
+    nfs-client: total 1984
+    nfs-client: drwxr-xr-x. 2 nfsnobody nfsnobody      20 Nov 29 23:37 .                            
+    nfs-client: drwxrwxrwx. 3 root      root           20 Nov 29 23:37 ..                           
+    nfs-client: -rw-r--r--. 1 nfsnobody nfsnobody 1048576 Nov 29 23:37 file1M                       
+    nfs-client: Копирование файла на клиенте
+    nfs-client: + echo Копирование файла на клиенте
+->  nfs-client: + cp /nfsfolder/upload/file1M .
+
+...
+
+[vagrant@nfs-server ~]$ nfsstat
+Server rpc stats:
+calls      badcalls   badclnt    badauth    xdrcall
+63         0          0          0          0       
+
+Server nfs v3:
+null         getattr      setattr      lookup       access       readlink     
+4         7% 6        10% 0         0% 1         1% 3         5% 0         0% 
+read         write        create       mkdir        symlink      mknod        
+0         0% 32       57% 1         1% 1         1% 0         0% 0         0% ----> mkdir 0 -> 1
+remove       rmdir        rename       link         readdir      readdirplus  
+0         0% 0         0% 0         0% 0         0% 0         0% 1         1% 
+fsstat       fsinfo       pathconf     commit       
+0         0% 4         7% 2         3% 1         1% 
+
+...
+
+[vagrant@nfs-client ~]$ ls -al /nfsfolder/upload
+total 1024
+drwxr-xr-x. 2 nfsnobody nfsnobody      20 Nov 29 23:37 .
+drwxrwxrwx. 3 root      root           20 Nov 29 23:37 ..
+-rw-r--r--. 1 nfsnobody nfsnobody 1048576 Nov 29 23:37 file1M
+

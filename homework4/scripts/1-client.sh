@@ -20,15 +20,20 @@ sudo chmod 0777 /nfsfolder
 echo Монтируем экспортированный каталог с сервера: версия NFSv3, протокол UDP
 sudo mount.nfs -vv nfs-server:/export/netfolder /nfsfolder -o nfsvers=3,proto=udp,soft
 
-echo Создаем в NFS-каталоге файл file1M размером 1МБ, сбрасываем на диск буфер ФС
-dd if=/dev/zero of=/nfsfolder/file1M bs=1K count=1024
+echo Создаем в NFS-каталоге папку upload, в ней файл file1M размером 1МБ, сбрасываем на диск буфер ФС
+# Дополнительное действие
+mkdir /nfsfolder/upload
+# of=/nfsfolder/file1M ---> of=/nfsfolder/upload/file1M
+dd if=/dev/zero of=/nfsfolder/upload/file1M bs=1K count=1024
 sync
 
-echo Убеждаемся, что файл появился в примонтированном NFS-каталоге
-ls -al /nfsfolder
+echo Убеждаемся, что файл появился в папке upload
+# /nfsfolder ---> /nfsfolder/upload
+ls -al /nfsfolder/upload
 
 echo Копирование файла на клиенте
-cp /nfsfolder/file1M .
+# /nfsfolder/file1M ---> /nfsfolder/upload/file1M
+cp /nfsfolder/upload/file1M .
 
 echo Настройка автомонтирования каталога при старте
 sudo touch /etc/systemd/system/nfsfolder.mount
