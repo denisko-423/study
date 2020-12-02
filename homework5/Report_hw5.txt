@@ -1,0 +1,352 @@
+# 1. Определить алгоритм с наилучшим сжатием.
+#
+# В системе имеем 6 свободных одинаковых дисков sdb-sdg.
+# -----------------------------------------------------------------------------------
+[vagrant@server ~]$ lsblk
+NAME   MAJ:MIN RM  SIZE RO TYPE MOUNTPOINT
+sda      8:0    0   10G  0 disk 
+`-sda1   8:1    0   10G  0 part /
+sdb      8:16   0  100M  0 disk 
+sdc      8:32   0  100M  0 disk 
+sdd      8:48   0  100M  0 disk 
+sde      8:64   0  100M  0 disk 
+sdf      8:80   0  100M  0 disk 
+sdg      8:96   0  100M  0 disk
+# -----------------------------------------------------------------------------------
+# Прежде чем создавать пул, определимся с параметром ashift.
+# Можно предоставить zfs определить его значение автоматически.
+# Сделаем это вручную.
+# Скачиваем утилиту и смотрим параметры одного из дисков.
+# -----------------------------------------------------------------------------------
+[vagrant@server ~]$ sudo yum install smartmontools
+[vagrant@server ~]$ sudo smartctl -a /dev/sdb
+smartctl 6.6 2017-11-05 r4594 [x86_64-linux-4.18.0-193.6.3.el8_2.x86_64] (local build)
+Copyright (C) 2002-17, Bruce Allen, Christian Franke, www.smartmontools.org
+
+=== START OF INFORMATION SECTION ===
+Device Model:     VBOX HARDDISK
+Serial Number:    VB6aa3f20b-eaa6971d
+Firmware Version: 1.0
+User Capacity:    104,857,600 bytes [104 MB]
+Sector Size:      512 bytes logical/physical
+Device is:        Not in smartctl database [for details use: -P showall]
+ATA Version is:   ATA/ATAPI-6 published, ANSI INCITS 361-2002
+Local Time is:    Wed Dec  2 10:50:08 2020 UTC
+SMART support is: Unavailable - device lacks SMART capability.
+
+A mandatory SMART command failed: exiting. To continue, add one or more '-T permissive' options.
+# -----------------------------------------------------------------------------------
+# Видим строку Sector Size: 512 bytes logical/physical,
+# размеры логического и физического секторов совпадают.
+# Этого и следовало ожидать, т.к. диски виртуальные.
+# Принимаем ashift = 9.
+# Имя пула - zfspool.
+# Создавать пул будем в отдельном каталоге /mypool,
+# в нем же будут монтироваться создаваемые в пуле файловые системы.
+# Тип пула - страйп из двух raidz1 по 2 диска в каждом.
+# Т.к. скорострельных дисков нет, параметры кэшей остаются по умолчанию,
+# специально создавать и настраивать ничего не будем.
+# Также оставляем по умолчанию параметры пула (recordsize, compression и др.).
+# -----------------------------------------------------------------------------------
+[vagrant@server ~]$ sudo mkdir /mypool
+[vagrant@server ~]$ sudo zpool create zfspool raidz1 /dev/sd[bc] raidz1 /dev/sd[de] -m /mypool/ -o ashift=9
+[vagrant@server ~]$ zpool list
+NAME      SIZE  ALLOC   FREE  CKPOINT  EXPANDSZ   FRAG    CAP  DEDUP    HEALTH  ALTROOT
+zfspool   320M   243K   320M        -         -     0%     0%  1.00x    ONLINE  -
+[vagrant@server ~]$ zpool status
+  pool: zfspool
+ state: ONLINE
+  scan: none requested
+config:
+
+        NAME        STATE     READ WRITE CKSUM
+        zfspool     ONLINE       0     0     0
+          raidz1-0  ONLINE       0     0     0
+            sdb     ONLINE       0     0     0
+            sdc     ONLINE       0     0     0
+          raidz1-1  ONLINE       0     0     0
+            sdd     ONLINE       0     0     0
+            sde     ONLINE       0     0     0
+
+errors: No known data errors
+# -----------------------------------------------------------------------------------
+# Размер пула получился 320М, т.о. один страйп, или другими словами
+# один raidz1 из двух дисков по 100М равен 160М.
+# Ничего не могу сказать про эти числа, какие-то накладные расходы.
+#
+# Для определения, какие алгоритмы сжатия поддерживает данная версия zfs,
+# просматриваем man zfs и находим соответствующую строку.
+# -----------------------------------------------------------------------------------
+[vagrant@server ~]$ man zfs
+...
+compression=on|off|gzip|gzip-N|lz4|lzjb|zle
+...
+# -----------------------------------------------------------------------------------
+# gzip-[1-9] - старый проверенный алгоритм с задаваемым уровнем сжатия.
+# С ростом уровня степень сжатия выше, но при этом растет нагрузка на процессор.
+# Проверим на двух уровнях - среднем (5) и высшем (9).
+#
+# lz4 - потоковый алгоритм, разработанный для замены lzjb.
+# Отличается хорошим балансом степени сжатия, скорости работы и нагрузки на систему.
+#
+# lzjb - устаревший оригинальный алгоритм ZFS.
+#
+# zle - не трогает нормальные данные, но сжимает большие последовательности одинаковых символов.
+# Полезен для несжимаемых наборов данных, проверим его на текстовом файле.
+#
+# Создаем в пуле 5 файловых систем со своими алгоритмами сжатия.
+# Можно задать алгоритмы и после создания, но тогда уже имеющиеся
+# в ФС файлы останутся несжатыми.
+# -----------------------------------------------------------------------------------
+[vagrant@server ~]$ sudo zfs create -o compression=gzip-9 zfspool/compress_gzip9
+[vagrant@server ~]$ sudo zfs create -o compression=gzip-5 zfspool/compress_gzip5
+[vagrant@server ~]$ sudo zfs create -o compression=lz4 zfspool/compress_lz4
+[vagrant@server ~]$ sudo zfs create -o compression=lzjb zfspool/compress_lzjb
+[vagrant@server ~]$ sudo zfs create -o compression=zle zfspool/compress_zle
+# -----------------------------------------------------------------------------------
+# Устанавливаем утилиту и скачиваем текстовый файл
+# (html больше по размеру, чем txt). Размер файла около 4М.
+# -----------------------------------------------------------------------------------
+[vagrant@server ~]$ sudo yum install wget
+[vagrant@server ~]$ wget -O War_and_Peace.html http://www.gutenberg.org/files/2600/2600-h/2600-h.htm
+--2020-12-02 11:16:25--  http://www.gutenberg.org/files/2600/2600-h/2600-h.htm
+Resolving www.gutenberg.org (www.gutenberg.org)... 152.19.134.47, 2610:28:3090:3000:0:bad:cafe:47
+Connecting to www.gutenberg.org (www.gutenberg.org)|152.19.134.47|:80... connected.
+HTTP request sent, awaiting response... 200 OK
+Length: 4072733 (3.9M) [text/html]
+Saving to: 'War_and_Peace.html'
+
+War_and_Peace.html       100%[==================================>]   3.88M   383KB/s    in 15s     
+
+2020-12-02 11:16:41 (269 KB/s) - 'War_and_Peace.html' saved [4072733/4072733]
+# -----------------------------------------------------------------------------------
+# Копируем файл в каждую файловую систему.
+# -----------------------------------------------------------------------------------
+[vagrant@server ~]$ cp War_and_Peace.html /mypool/compress_gzip9/
+cp: cannot create regular file '/mypool/compress_gzip9/War_and_Peace.html': Permission denied
+# -----------------------------------------------------------------------------------
+# Создать ФС мало, надо еще иметь права на запись для работы в ней.
+# Сейчас такие права есть только у рута.
+# -----------------------------------------------------------------------------------
+[vagrant@server ~]$ ls -al /mypool/
+total 4
+drwxr-xr-x.  7 root root   7 Dec  2 11:12 .
+dr-xr-xr-x. 19 root root 269 Dec  2 11:11 ..
+drwxr-xr-x.  2 root root   2 Dec  2 11:11 compress_gzip5
+drwxr-xr-x.  2 root root   2 Dec  2 11:11 compress_gzip9
+drwxr-xr-x.  2 root root   2 Dec  2 11:12 compress_lz4
+drwxr-xr-x.  2 root root   2 Dec  2 11:12 compress_lzjb
+drwxr-xr-x.  2 root root   2 Dec  2 11:12 compress_zle
+# -----------------------------------------------------------------------------------
+# Назначаем соответствующие права на все файловые системы,
+# не трогая при этом корневой каталог.
+# -----------------------------------------------------------------------------------
+[vagrant@server ~]$ sudo chmod 0777 /mypool/*
+[vagrant@server ~]$ ls -al /mypool/
+total 4
+drwxr-xr-x.  7 root root   7 Dec  2 11:12 .
+dr-xr-xr-x. 19 root root 269 Dec  2 11:11 ..
+drwxrwxrwx.  2 root root   2 Dec  2 11:11 compress_gzip5
+drwxrwxrwx.  2 root root   2 Dec  2 11:11 compress_gzip9
+drwxrwxrwx.  2 root root   2 Dec  2 11:12 compress_lz4
+drwxrwxrwx.  2 root root   2 Dec  2 11:12 compress_lzjb
+drwxrwxrwx.  2 root root   2 Dec  2 11:12 compress_zle
+# -----------------------------------------------------------------------------------
+# Копируем файл в каждую файловую систему.
+# -----------------------------------------------------------------------------------
+[vagrant@server ~]$ cp War_and_Peace.html /mypool/compress_gzip9/
+[vagrant@server ~]$ cp War_and_Peace.html /mypool/compress_gzip5/
+[vagrant@server ~]$ cp War_and_Peace.html /mypool/compress_lz4/
+[vagrant@server ~]$ cp War_and_Peace.html /mypool/compress_lzjb/
+[vagrant@server ~]$ cp War_and_Peace.html /mypool/compress_zle/
+# -----------------------------------------------------------------------------------
+# Смотрим степени сжатия.
+#
+# Лидер - gzip-9, чуть хуже gzip-5.
+# Разница между ними небольшая (для данного файла),
+# поэтому нет смысла сильно нагружать процессор 9-м уровнем.
+[vagrant@server ~]$ zfs get compressratio /mypool/compress_gzip9/
+NAME                    PROPERTY       VALUE  SOURCE
+zfspool/compress_gzip9  compressratio  3.12x  -
+[vagrant@server ~]$ zfs get compressratio /mypool/compress_gzip5/
+NAME                    PROPERTY       VALUE  SOURCE
+zfspool/compress_gzip5  compressratio  3.05x  -
+#
+# Вторым идет lz4. Если говорить только о степени сжатия,
+# то предпочтительнее gzip. Совокупность сжатия-скорости-нагрузки
+# надо смотреть на больших объемах данных. Имеющийся файл
+# не позволяет это оценить.
+[vagrant@server ~]$ zfs get compressratio /mypool/compress_lz4/
+NAME                  PROPERTY       VALUE  SOURCE
+zfspool/compress_lz4  compressratio  1.92x  -
+#
+# "Старичок" lzjb показал средний результат.
+[vagrant@server ~]$ zfs get compressratio /mypool/compress_lzjb/
+NAME                   PROPERTY       VALUE  SOURCE
+zfspool/compress_lzjb  compressratio  1.56x  -
+#
+# Практически ничего не сжал zle. Но этого и следовало ожидать,
+# хорошо сжимаемые файлы - не его конек. Он эффективен на
+# jpeg, mpx и пр., которые другими алгоритмами не сжимаются.
+[vagrant@server ~]$ zfs get compressratio /mypool/compress_zle/
+NAME                  PROPERTY       VALUE  SOURCE
+zfspool/compress_zle  compressratio  1.02x  -
+# ==========================================================================
+#
+# 2. Определить настройки pool’a.
+#
+# Загружаем предлагаемый архив.
+# -----------------------------------------------------------------------------------
+[vagrant@server ~]$ wget --no-check-certificate "https://docs.google.com/uc?export=download&id=1KRBNW33QWqbvbVHa3hLJivOAt60yukkg" -O file.tar.gz
+... (вывод длинный, опущен) ...
+2020-12-02 11:21:20 (2.83 MB/s) - 'file.tar.gz' saved [7275140]
+# -----------------------------------------------------------------------------------
+# Распаковываем.
+# Имеем каталог zpoolexport с двумя файлами - filea и fileb.
+# -----------------------------------------------------------------------------------
+[vagrant@server ~]$ tar xfvz file.tar.gz
+zpoolexport/
+zpoolexport/filea
+zpoolexport/fileb
+[vagrant@server ~]$ ls -al
+total 11100
+drwx------. 4 vagrant vagrant     138 Dec  2 11:21 .
+drwxr-xr-x. 3 root    root         21 Jun 11 02:37 ..
+-rw-r--r--. 1 vagrant vagrant      18 Nov  8  2019 .bash_logout
+-rw-r--r--. 1 vagrant vagrant     141 Nov  8  2019 .bash_profile
+-rw-r--r--. 1 vagrant vagrant     312 Nov  8  2019 .bashrc
+drwx------. 2 vagrant vagrant      29 Dec  2 11:08 .ssh
+-rw-rw-r--. 1 vagrant vagrant 4072733 Aug  6 14:10 War_and_Peace.html
+-rw-rw-r--. 1 vagrant vagrant 7275140 Dec  2 11:21 file.tar.gz
+drwxr-xr-x. 2 vagrant vagrant      32 May 15  2020 zpoolexport
+# -----------------------------------------------------------------------------------
+# Для определения, что за пул предложен к импорту,
+# вводим команду без параметров монтирования.
+# -----------------------------------------------------------------------------------
+[vagrant@server ~]$ sudo zpool import -d zpoolexport
+   pool: otus
+     id: 6554193320433390805
+  state: ONLINE
+ action: The pool can be imported using its name or numeric identifier.
+ config:
+
+        otus                                 ONLINE
+          mirror-0                           ONLINE
+            /home/vagrant/zpoolexport/filea  ONLINE
+            /home/vagrant/zpoolexport/fileb  ONLINE
+# -----------------------------------------------------------------------------------
+# Имя пула otus, тип зеркало из двух частей (файлов).
+# Исходные файлы можно для порядка переместить в другое место,
+# но это неважно, оставляем как есть.
+# Импортируем пул, в нашей системе он будет называться importpool,
+# с одноименным каталогом монтирования /importpool.
+# -----------------------------------------------------------------------------------
+[vagrant@server ~]$ sudo zpool import -d zpoolexport -o ashift=9 otus importpool
+# -----------------------------------------------------------------------------------
+# Имеем пул importpool с файловой системой hometask2.
+# -----------------------------------------------------------------------------------
+[vagrant@server ~]$ ls -al /importpool/
+total 3
+drwxr-xr-x.   3 root root   3 May 15  2020 .
+dr-xr-xr-x.  20 root root 287 Dec  2 11:24 ..
+drwxr-xr-x. 102 root root 102 May 15  2020 hometask2
+# -----------------------------------------------------------------------------------
+# Тип пула - "зеркало" из двух частей (файлов).
+# Строго говоря, это страйп (...-0), только из одной части.
+# Размер пула 480M.
+# В параметрах пула (zpool get all importpool), по-моему,
+# ничего интересного нет.
+# -----------------------------------------------------------------------------------
+[vagrant@server ~]$ zpool list importpool
+NAME         SIZE  ALLOC   FREE  CKPOINT  EXPANDSZ   FRAG    CAP  DEDUP    HEALTH  ALTROOT
+importpool   480M  2.11M   478M        -         -     0%     0%  1.00x    ONLINE  -
+[vagrant@server ~]$ zpool status importpool
+  pool: importpool
+ state: ONLINE
+  scan: none requested
+config:
+
+        NAME                                 STATE     READ WRITE CKSUM
+        importpool                           ONLINE       0     0     0
+          mirror-0                           ONLINE       0     0     0
+            /home/vagrant/zpoolexport/filea  ONLINE       0     0     0
+            /home/vagrant/zpoolexport/fileb  ONLINE       0     0     0
+
+errors: No known data errors
+# -----------------------------------------------------------------------------------
+# Свойства файловой системы смотрим командой
+# zfs get all /importpool/hometask2/
+#
+# Размер блока данных 128К, унаследован из свойств пула:
+importpool/hometask2  recordsize            128K                   inherited from importpool
+#
+# Тип сжатия zle, также унаследован из свойств пула:
+importpool/hometask2  compression           zle                    inherited from importpool
+#
+# Контрольная сумма sha256, значение унаследовано из свойств пула:
+importpool/hometask2  checksum              sha256                 inherited from importpool
+# -----------------------------------------------------------------------------------
+# Содержимое импортированной файловой системы:
+# 17537 каталогов, файлов нет.
+#
+[vagrant@server ~]$ find /importpool/hometask2/ -type d | wc -l
+17537
+[vagrant@server ~]$ find /importpool/hometask2/ -type f | wc -l
+0
+# =======================================================================
+#
+# 3. Найти сообщение от преподавателей.
+#
+# Скачиваем предложенный файл.
+# Методика скачивания:
+# https://wiki.iphoster.net/wiki/Wget_-_%D0%BA%D0%B0%D0%BA_%D0%B2%D1%8B%D0%BA%D0%B0%D1%87%D0%B0%D1%82%D1%8C_%D0%B0%D1%80%D1%85%D0%B8%D0%B2_c_Google_Drive_%D0%BF%D0%BE_%D0%BF%D1%80%D1%8F%D0%BC%D0%BE%D0%B9_%D1%81%D1%81%D1%8B%D0%BB%D0%BA%D0%B5
+# -----------------------------------------------------------------------------------
+[vagrant@server ~]$ wget --load-cookies /tmp/cookies.txt "https://docs.google.com/uc?export=download&confirm=$(wget --quiet --save-cookies /tmp/cookies.txt --keep-session-cookies --no-check-certificate 'https://docs.google.com/uc?export=download&id=1gH8gCL9y7Nd5Ti3IRmplZPF1XjzxeRAG' -O- | sed -rn 's/.*confirm=([0-9A-Za-z_]+).*/\1\n/p')&id=1gH8gCL9y7Nd5Ti3IRmplZPF1XjzxeRAG" -O file && rm -rf /tmp/cookies.txt
+... (вывод длинный, опущен) ...
+2020-12-02 11:30:45 (2.64 MB/s) - 'file' saved [5432736]
+# -----------------------------------------------------------------------------------
+# Для восстановления из снапшота собираем пул типа "зеркало"
+# из двух оставшихся дисков.
+# -----------------------------------------------------------------------------------
+[vagrant@server ~]$ sudo zpool create snappool mirror /dev/sdf /dev/sdg
+[vagrant@server ~]$ zpool status snappool
+  pool: snappool
+ state: ONLINE
+  scan: none requested
+config:
+
+        NAME        STATE     READ WRITE CKSUM
+        snappool    ONLINE       0     0     0
+          mirror-0  ONLINE       0     0     0
+            sdf     ONLINE       0     0     0
+            sdg     ONLINE       0     0     0
+
+errors: No known data errors
+# -----------------------------------------------------------------------------------
+# Восстанавливаем снапшот в файловую систему snappool/something.
+# -----------------------------------------------------------------------------------
+[vagrant@server ~]$ sudo zfs receive snappool/something < file
+[vagrant@server ~]$ ls -al /snappool/something/
+total 3474
+drwxr-xr-x. 3 root    root         11 May 15  2020 .
+drwxr-xr-x. 3 root    root          3 Dec  2 11:33 ..
+-rw-r--r--. 1 root    root          0 May 15  2020 10M.file
+-rw-r--r--. 1 root    root     309987 May 15  2020 Limbo.txt
+-rw-r--r--. 1 root    root     509836 May 15  2020 Moby_Dick.txt
+-rw-r--r--. 1 root    root    1209374 May  6  2016 War_and_Peace.txt
+-rw-r--r--. 1 root    root     727040 May 15  2020 cinderella.tar
+-rw-r--r--. 1 root    root         65 May 15  2020 for_examaple.txt
+-rw-r--r--. 1 root    root          0 May 15  2020 homework4.txt
+drwxr-xr-x. 3 vagrant vagrant       4 Dec 18  2017 task1
+-rw-r--r--. 1 root    root     398635 May 15  2020 world.sql
+# -----------------------------------------------------------------------------------
+# Находим файл secret_message, в нем содержится ссылка на github.
+# По-видимому, это и есть требуемое сообщение.
+# -----------------------------------------------------------------------------------
+[vagrant@server ~]$ find /snappool/something/ -name secret_message
+/snappool/something/task1/file_mess/secret_message
+[vagrant@server ~]$ ls -al /snappool/something/task1/file_mess/secret_message
+-rw-r--r--. 1 root root 40 May 15  2020 /snappool/something/task1/file_mess/secret_message
+[vagrant@server ~]$ cat /snappool/something/task1/file_mess/secret_message
+https://github.com/sindresorhus/awesome
+

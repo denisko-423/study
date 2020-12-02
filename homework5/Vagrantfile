@@ -1,0 +1,50 @@
+# -*- mode: ruby -*-
+# vim: set ft=ruby :
+
+MACHINES = {
+  :'server' => {
+    :disks => {
+      :sata1 => { :dfile => './disks/main1.vdi', :size => 100, :port => 1 },
+      :sata2 => { :dfile => './disks/main2.vdi', :size => 100, :port => 2 },
+      :sata3 => { :dfile => './disks/main3.vdi', :size => 100, :port => 3 },
+      :sata4 => { :dfile => './disks/main4.vdi', :size => 100, :port => 4 },
+      :sata5 => { :dfile => './disks/main5.vdi', :size => 100, :port => 5 },
+      :sata6 => { :dfile => './disks/main6.vdi', :size => 100, :port => 6 }
+    },
+    :script => [ { :path => "./setup_zfs.sh" } ]
+  }
+}
+
+Vagrant.configure("2") do |config|
+  MACHINES.each do |boxname, boxconfig|
+    config.vm.define boxname do |box|
+      box.vm.box = 'centos/8.2'
+      box.vm.box_url = 'https://cloud.centos.org/centos/8/x86_64/images/CentOS-8-Vagrant-8.2.2004-20200611.2.x86_64.vagrant-virtualbox.box'
+      box.vm.box_download_checksum = '698b0d9c6c3f31a4fd1c655196a5f7fc224434112753ab6cb3218493a86202de'
+      box.vm.box_download_checksum_type = 'sha256'
+      box.vm.host_name = boxname.to_s
+      box.vm.provider :virtualbox do |vb|
+        vb.customize ["modifyvm", :id, "--memory", "2048", "--cpus", "2"]
+        needsController = false
+        boxconfig[:disks].each do |dname, dconf|
+          unless File.exist?(dconf[:dfile])
+            vb.customize ['createhd', '--filename', dconf[:dfile], '--variant', 'Standard', '--size', dconf[:size]]
+            needsController =  true
+          end
+        end
+        if needsController == true
+          vb.customize ["storagectl", :id, "--name", "SATA", "--add", "sata" ]
+          boxconfig[:disks].each do |dname, dconf|
+            vb.customize ['storageattach', :id,  '--storagectl', 'SATA', '--port', dconf[:port], '--device', 0, '--type', 'hdd', '--medium', dconf[:dfile]]
+          end
+        end
+      end
+      boxconfig[:script].each do |script|
+        box.vm.provision "shell",
+        path: script[:path],
+        env: {"PROVISIONER" => "vagrant"}
+      end
+    end
+  end
+end
+
