@@ -101,7 +101,7 @@ type=SYSCALL msg=audit(1611460160.464:738): arch=x86_64 syscall=bind success=no 
 
 Hash: nginx,httpd_t,unreserved_port_t,tcp_socket,name_bind
 ```
-Причина неработоспособности nginx - несоответствие контекстов процесса и порта. Контекст процесса - system\_u:system\_r:httpd\_t:s0 (домен httpd\_t), контекст порта - system\_u:object\_r:unreserved\_port\_t:s0 (тип unreserved\_port\_t). Так как домен процесса изменить невозможно (слишком много на него завязано), то остается изменить тип порта, либо разрешить SELinux взаимодействие этих типов.
+Причина неработоспособности nginx - несоответствие контекстов процесса и порта. Контекст процесса - system\_u:system\_r:httpd\_t:s0 (домен httpd\_t), контекст порта - system\_u:object\_r:unreserved\_port\_t:s0 (тип unreserved\_port\_t). Так как домен процесса изменить невозможно (слишком много на него завязано), то остается изменить тип порта, либо разрешить SELinux взаимодействие этих типов.  
 Лучшим решением (92.2 балла из 100) утилита считает изменение типа порта, вторым по значимости (7.83 балла) использование переключателя, и как вариант (1.41 балла) компилирование и установку модуля политики.
 
 ## Изменение типа порта
@@ -117,7 +117,7 @@ Hash: nginx,httpd_t,unreserved_port_t,tcp_socket,name_bind
 Тип порта 80 - http\_port\_t. Его и назначим новому порту 3080.
 Выполним предложенную утилитой команду, подставив в нее требуемый тип порта:
 ```
-semanage port -a -t http\_port\_t -p tcp 3080
+semanage port -a -t http_port_t -p tcp 3080
 ```
 Теперь nginx запускается и работает нормально, новый порт прослушивается:
 ```
@@ -152,10 +152,6 @@ tcp    LISTEN     0      128    [::]:80                 [::]:*                  
 ```
 [root@nginx-and-selinux vagrant]# systemctl stop nginx
 [root@nginx-and-selinux vagrant]# semanage port -d -p tcp 3080
-[root@nginx-and-selinux vagrant]# seinfo --portcon=3080
-        portcon tcp 1024-32767 system_u:object_r:unreserved_port_t:s0
-        portcon udp 1024-32767 system_u:object_r:unreserved_port_t:s0
-        portcon sctp 1024-65535 system_u:object_r:unreserved_port_t:s0
 ```
 
 ## Использование переключателя
@@ -174,7 +170,7 @@ tcp    LISTEN     0      128    [::]:80                 [::]:*                  
 
 ## Формирование и установка модуля
 Политики в SELinux реализованы в виде модулей - исполняемых файлов, подгружаемых в систему в процессе работы.  
-Утилита sealert предлагает выполнить две команды, чтобы позволить nginx работать с нестандартным портом.
+Утилита sealert предлагает выполнить две команды, чтобы позволить nginx работать с нестандартным портом.  
 Первая команда выполняет поиск записей, относящихся к nginx, в логе SELinux, и генерирует на основании информации из лога модуль политики:
 ```
 [root@nginx-and-selinux vagrant]# ausearch -c 'nginx' --raw | audit2allow -M my-nginx
@@ -200,8 +196,8 @@ require {
 #!!!! This avc can be allowed using the boolean 'nis_enabled'
 allow httpd_t unreserved_port_t:tcp_socket name_bind;
 ```
-В тексте модуля есть и подсказка, что этого можно достигнуть и с помощью переключателя nis_enabled.
-Вторая команда компилирует и устанавливает модуль:
+В тексте модуля есть и подсказка, что этого можно достигнуть и с помощью переключателя nis_enabled.  
+Вторая команда компилирует и устанавливает модуль, включая его в работу:
 ```
 [root@nginx-and-selinux vagrant]# semodule -i my-nginx.pp
 ```
