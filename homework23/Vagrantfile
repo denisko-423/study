@@ -1,0 +1,46 @@
+MACHINES = {
+  :client => {
+    :box_name => "centos/7",
+    :cpus => 1,
+    :memory => 1024,
+    :net => [ { :ip => "192.168.10.20" } ],
+    :provision_script => [ { :path => "./client.sh" } ]
+  },
+  :server => {
+    :box_name => "centos/7",
+    :cpus => 2,
+    :memory => 1024,
+    :net => [ { :ip => "192.168.10.10" } ],
+    :provision_script => [ { :path => "./server.sh" } ]
+  }
+}
+
+Vagrant.configure("2") do |config|
+  config.vm.provider "virtualbox" do |g|
+    g.check_guest_additions = false
+  end
+  MACHINES.each do |boxname, boxconfig|
+    config.vm.synced_folder ".", "/vagrant", disabled: true
+    config.vm.define boxname do |box|
+      box.vm.box = boxconfig[:box_name]
+      box.vm.host_name = boxname.to_s
+      if boxconfig.key?(:net)
+        boxconfig[:net].each do |ipconf|
+          box.vm.network "private_network", ipconf
+        end
+      end
+      box.vm.provider "virtualbox" do |v|
+        v.memory = boxconfig[:memory]
+        v.cpus = boxconfig[:cpus]
+      end
+      if boxconfig.key?(:provision_script)
+        boxconfig[:provision_script].each do |script|
+          box.vm.provision "shell",
+            path: script[:path],
+            env: {"PROVISIONER" => "vagrant"}
+        end
+      end
+    end
+  end
+end
+
