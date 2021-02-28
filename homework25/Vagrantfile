@@ -1,0 +1,115 @@
+# -*- mode: ruby -*-
+# vim: set ft=ruby :
+
+MACHINES = {
+:inetRouter => {
+  :box_name => "centos/7",
+  :net => [
+  {ip: "192.168.255.1", adapter: 2, netmask: "255.255.255.252", virtualbox__intnet: "router-net"},
+  ]
+},
+:centralRouter => {
+  :box_name => "centos/7",
+  :net => [
+  {ip: "192.168.255.2", adapter: 2, netmask: "255.255.255.252", virtualbox__intnet: "router-net"},
+  {ip: "192.168.255.5", adapter: 3, netmask: "255.255.255.252", virtualbox__intnet: "router1-net"},
+  {ip: "192.168.255.9", adapter: 4, netmask: "255.255.255.252", virtualbox__intnet: "router2-net"},
+  {ip: "192.168.0.1",   adapter: 5, netmask: "255.255.255.240", virtualbox__intnet: "central-dir-net"},
+  {ip: "192.168.0.33",  adapter: 6, netmask: "255.255.255.240", virtualbox__intnet: "central-hw-net"},
+  {ip: "192.168.0.65",  adapter: 7, netmask: "255.255.255.192", virtualbox__intnet: "central-wifi-net"},
+  ]
+},
+:office1Router => {
+  :box_name => "centos/7",
+  :net => [
+  {ip: "192.168.255.6", adapter: 2, netmask: "255.255.255.252", virtualbox__intnet: "router1-net"},
+  {ip: "192.168.2.1",   adapter: 3, netmask: "255.255.255.192", virtualbox__intnet: "office1-dev-net"},
+  {ip: "192.168.2.65",  adapter: 4, netmask: "255.255.255.192", virtualbox__intnet: "office1-tests-net"},
+  {ip: "192.168.2.129", adapter: 5, netmask: "255.255.255.192", virtualbox__intnet: "office1-managers-net"},
+  {ip: "192.168.2.193", adapter: 6, netmask: "255.255.255.192", virtualbox__intnet: "office1-hw-net"},
+  ]
+},
+:office2Router => {
+  :box_name => "centos/7",
+  :net => [
+  {ip: "192.168.255.10", adapter: 2, netmask: "255.255.255.252", virtualbox__intnet: "router2-net"},
+  {ip: "192.168.3.1",    adapter: 3, netmask: "255.255.255.128", virtualbox__intnet: "office2-dev-net"},
+  {ip: "192.168.3.129",  adapter: 4, netmask: "255.255.255.192", virtualbox__intnet: "office2-tests-net"},
+  {ip: "192.168.3.193",  adapter: 5, netmask: "255.255.255.192", virtualbox__intnet: "office2-hw-net"},
+  ]
+},
+:centralServer => {
+  :box_name => "centos/7",
+  :net => [
+  {ip: "192.168.0.2", adapter: 2, netmask: "255.255.255.240", virtualbox__intnet: "central-dir-net"},
+  ]
+},
+:office1Server => {
+  :box_name => "centos/7",
+  :net => [
+  {ip: "192.168.2.2", adapter: 2, netmask: "255.255.255.192", virtualbox__intnet: "office1-dev-net"},
+  ]
+},
+:office2Server => {
+  :box_name => "centos/7",
+  :net => [
+  {ip: "192.168.3.2", adapter: 2, netmask: "255.255.255.128", virtualbox__intnet: "office2-dev-net"},
+  ]
+},
+}
+
+$custom_gateway = <<-SCRIPT
+  [[ -n "$2" ]] && echo "net.ipv4.conf.all.forwarding=1" >> /etc/sysctl.conf
+  echo "DEFROUTE=no" >> /etc/sysconfig/network-scripts/ifcfg-eth0
+  echo "GATEWAY=$1"  >> /etc/sysconfig/network-scripts/ifcfg-eth1
+  for ((i=1; i < 4; i++)); do
+    systemctl restart network
+    [[ `ip route | grep "default via $1"` ]] && break || echo "default via $1 not found, restart network"
+  done
+SCRIPT
+
+Vagrant.configure("2") do |config|
+  MACHINES.each do |boxname, boxconfig|
+    config.vm.define boxname do |box|
+      box.vm.box = boxconfig[:box_name]
+      box.vm.host_name = boxname.to_s
+      box.vm.provider :virtualbox do |v|
+        v.customize ["modifyvm", :id, "--memory", "300", "--cpus", "1"]
+        v.check_guest_additions = false
+      end
+      boxconfig[:net].each do |ipconf|
+        box.vm.network "private_network", ipconf
+      end
+      case boxname.to_s
+      when "inetRouter"
+        box.vm.provision "shell", inline: <<-SHELL
+          echo "net.ipv4.conf.all.forwarding=1" >> /etc/sysctl.conf
+          echo "192.168.0.0/22 via 192.168.255.2" > /etc/sysconfig/network-scripts/route-eth1
+          iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
+          for ((i=1; i < 4; i++)); do
+            systemctl restart network
+            [[ `ip route | grep "192.168.0.0/22 via 192.168.255.2"` ]] \
+            && break || echo "route to intnet not found, restart network"
+          done
+          SHELL
+      when "centralRouter"
+        box.vm.provision "shell", inline: <<-SHELL
+          echo "192.168.2.0/24 via 192.168.255.6" > /etc/sysconfig/network-scripts/route-eth2
+          echo "192.168.3.0/24 via 192.168.255.10" > /etc/sysconfig/network-scripts/route-eth3
+          SHELL
+        box.vm.provision "shell", inline: $custom_gateway, args: ["192.168.255.1", "router"]
+      when "office1Router"
+        box.vm.provision "shell", inline: $custom_gateway, args: ["192.168.255.5", "router"]
+      when "office2Router"
+        box.vm.provision "shell", inline: $custom_gateway, args: ["192.168.255.9", "router"]
+      when "centralServer"
+        box.vm.provision "shell", inline: $custom_gateway, args: "192.168.0.1"
+      when "office1Server"
+        box.vm.provision "shell", inline: $custom_gateway, args: "192.168.2.1"
+      when "office2Server"
+        box.vm.provision "shell", inline: $custom_gateway, args: "192.168.3.1"
+      end
+    end
+  end
+end
+
