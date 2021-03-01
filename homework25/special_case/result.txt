@@ -1,0 +1,51 @@
+[vagrant@server3 ~]$ ping 192.168.0.2
+PING 192.168.0.2 (192.168.0.2) 56(84) bytes of data.
+From 192.168.0.1 icmp_seq=1 Redirect Host(New nexthop: 192.168.0.2)
+From 192.168.0.1: icmp_seq=1 Redirect Host(New nexthop: 192.168.0.2)
+64 bytes from 192.168.0.2: icmp_seq=1 ttl=63 time=0.807 ms
+64 bytes from 192.168.0.2: icmp_seq=2 ttl=64 time=1.58 ms
+64 bytes from 192.168.0.2: icmp_seq=3 ttl=64 time=0.972 ms
+64 bytes from 192.168.0.2: icmp_seq=4 ttl=64 time=0.652 ms
+^C
+--- 192.168.0.2 ping statistics ---
+4 packets transmitted, 4 received, +1 errors, 0% packet loss, time 3004ms
+rtt min/avg/max/mdev = 0.652/1.003/1.584/0.355 ms
+[vagrant@server3 ~]$ 
+[vagrant@server3 ~]$ 
+[vagrant@server3 ~]$ ping 192.168.0.2
+PING 192.168.0.2 (192.168.0.2) 56(84) bytes of data.
+64 bytes from 192.168.0.2: icmp_seq=1 ttl=64 time=0.431 ms
+64 bytes from 192.168.0.2: icmp_seq=2 ttl=64 time=0.988 ms
+64 bytes from 192.168.0.2: icmp_seq=3 ttl=64 time=0.785 ms
+64 bytes from 192.168.0.2: icmp_seq=4 ttl=64 time=0.974 ms
+^C
+--- 192.168.0.2 ping statistics ---
+4 packets transmitted, 4 received, 0% packet loss, time 3003ms
+rtt min/avg/max/mdev = 0.431/0.794/0.988/0.226 ms
+[vagrant@server3 ~]$ 
+[vagrant@server3 ~]$ 
+[vagrant@server3 ~]$ ping 192.168.0.34
+PING 192.168.0.34 (192.168.0.34) 56(84) bytes of data.
+From 192.168.0.1 icmp_seq=1 Redirect Host(New nexthop: 192.168.0.34)
+From 192.168.0.1: icmp_seq=1 Redirect Host(New nexthop: 192.168.0.34)
+64 bytes from 192.168.0.34: icmp_seq=1 ttl=63 time=0.972 ms
+64 bytes from 192.168.0.34: icmp_seq=2 ttl=64 time=1.76 ms
+64 bytes from 192.168.0.34: icmp_seq=3 ttl=64 time=1.01 ms
+64 bytes from 192.168.0.34: icmp_seq=4 ttl=64 time=1.08 ms
+^C
+--- 192.168.0.34 ping statistics ---
+4 packets transmitted, 4 received, +1 errors, 0% packet loss, time 3006ms
+rtt min/avg/max/mdev = 0.972/1.208/1.766/0.325 ms
+[vagrant@server3 ~]$ 
+[vagrant@server3 ~]$ 
+[vagrant@server3 ~]$ ping 192.168.0.34
+PING 192.168.0.34 (192.168.0.34) 56(84) bytes of data.
+64 bytes from 192.168.0.34: icmp_seq=1 ttl=64 time=0.617 ms
+64 bytes from 192.168.0.34: icmp_seq=2 ttl=64 time=0.951 ms
+64 bytes from 192.168.0.34: icmp_seq=3 ttl=64 time=0.918 ms
+64 bytes from 192.168.0.34: icmp_seq=4 ttl=64 time=0.924 ms
+^C
+--- 192.168.0.34 ping statistics ---
+4 packets transmitted, 4 received, 0% packet loss, time 3004ms
+rtt min/avg/max/mdev = 0.617/0.852/0.951/0.139 ms
+
